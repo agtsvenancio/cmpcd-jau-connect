@@ -1,23 +1,20 @@
-import SiteHeader from "@/components/SiteHeader";
+import PageLayout from "@/components/PageLayout";
 import HeroSection from "@/components/HeroSection";
-import AboutSection from "@/components/AboutSection";
-import ObjectivesSection from "@/components/ObjectivesSection";
-import DataSection from "@/components/DataSection";
-import TransparencySection from "@/components/TransparencySection";
-import SiteFooter from "@/components/SiteFooter";
+import HomeAbout from "@/components/home/HomeAbout";
+import HomeObjectives from "@/components/home/HomeObjectives";
+import HomeStats from "@/components/home/HomeStats";
+import HomeNews from "@/components/home/HomeNews";
+import HomeSocial from "@/components/home/HomeSocial";
 
 const Index = () => (
-  <>
-    <SiteHeader />
-    <main>
-      <HeroSection />
-      <AboutSection />
-      <ObjectivesSection />
-      <DataSection />
-      <TransparencySection />
-    </main>
-    <SiteFooter />
-  </>
+  <PageLayout>
+    <HeroSection />
+    <HomeAbout />
+    <HomeObjectives />
+    <HomeStats />
+    <HomeNews />
+    <HomeSocial />
+  </PageLayout>
 );
 
 export default Index;
