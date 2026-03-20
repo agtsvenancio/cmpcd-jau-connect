@@ -87,6 +87,14 @@ const SiteHeader = () => {
               >
                 Registrar PCD
               </Link>
+              <Link
+                to="/admin"
+                onClick={() => setOpen(false)}
+                className="text-sm font-semibold text-foreground/70 hover:text-primary transition-colors flex items-center gap-1.5 justify-center mt-1"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                Área Administrativa
+              </Link>
             </div>
           </motion.nav>
         )}
