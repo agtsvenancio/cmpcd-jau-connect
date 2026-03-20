@@ -7,7 +7,6 @@ const navItems = [
   { label: "Início", href: "/" },
   { label: "Quem Somos", href: "/quem-somos" },
   { label: "Iniciativas", href: "/iniciativas" },
-  { label: "Dados Sociais", href: "/dados-sociais" },
   { label: "Notícias", href: "/noticias" },
   { label: "Transparência", href: "/transparencia" },
   { label: "Apoio", href: "/apoio" },
