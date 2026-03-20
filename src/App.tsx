@@ -8,7 +8,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import QuemSomos from "./pages/QuemSomos";
 import Iniciativas from "./pages/Iniciativas";
-import DadosSociais from "./pages/DadosSociais";
+import Admin from "./pages/Admin";
 import Noticias from "./pages/Noticias";
 import NoticiaDetalhe from "./pages/NoticiaDetalhe";
 import Transparencia from "./pages/Transparencia";
