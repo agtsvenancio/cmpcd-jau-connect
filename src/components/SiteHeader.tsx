@@ -41,6 +41,13 @@ const SiteHeader = () => {
           >
             Registrar PCD
           </Link>
+          <Link
+            to="/admin"
+            className="text-sm font-semibold text-foreground/70 hover:text-primary transition-colors flex items-center gap-1.5"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            Admin
+          </Link>
         </nav>
 
         <button
