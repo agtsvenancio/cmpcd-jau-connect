@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Accessibility } from "lucide-react";
+import { Menu, X, Accessibility, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
   { label: "Início", href: "/" },
   { label: "Quem Somos", href: "/quem-somos" },
   { label: "Iniciativas", href: "/iniciativas" },
-  { label: "Dados Sociais", href: "/dados-sociais" },
   { label: "Notícias", href: "/noticias" },
   { label: "Transparência", href: "/transparencia" },
   { label: "Apoio", href: "/apoio" },
@@ -41,6 +40,13 @@ const SiteHeader = () => {
             className="text-sm font-bold bg-primary text-primary-foreground px-4 py-2 rounded-full hover:bg-primary/90 transition-colors"
           >
             Registrar PCD
+          </Link>
+          <Link
+            to="/admin"
+            className="text-sm font-semibold text-foreground/70 hover:text-primary transition-colors flex items-center gap-1.5"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            Admin
           </Link>
         </nav>
 
@@ -80,6 +86,14 @@ const SiteHeader = () => {
                 className="text-sm font-bold bg-primary text-primary-foreground px-4 py-2 rounded-full text-center hover:bg-primary/90 transition-colors mt-2"
               >
                 Registrar PCD
+              </Link>
+              <Link
+                to="/admin"
+                onClick={() => setOpen(false)}
+                className="text-sm font-semibold text-foreground/70 hover:text-primary transition-colors flex items-center gap-1.5 justify-center mt-1"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                Área Administrativa
               </Link>
             </div>
           </motion.nav>

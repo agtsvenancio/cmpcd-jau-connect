@@ -8,7 +8,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import QuemSomos from "./pages/QuemSomos";
 import Iniciativas from "./pages/Iniciativas";
-import DadosSociais from "./pages/DadosSociais";
+import Admin from "./pages/Admin";
 import Noticias from "./pages/Noticias";
 import NoticiaDetalhe from "./pages/NoticiaDetalhe";
 import Transparencia from "./pages/Transparencia";
@@ -31,7 +31,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/quem-somos" element={<QuemSomos />} />
             <Route path="/iniciativas" element={<Iniciativas />} />
-            <Route path="/dados-sociais" element={<DadosSociais />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="/noticias" element={<Noticias />} />
             <Route path="/noticias/:id" element={<NoticiaDetalhe />} />
             <Route path="/transparencia" element={<Transparencia />} />
