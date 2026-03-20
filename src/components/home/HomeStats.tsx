@@ -31,7 +31,7 @@ const HomeStats = () => (
         <p className="text-primary-foreground/85 max-w-2xl mx-auto leading-relaxed">
           Esses dados são fundamentais para o planejamento de políticas públicas, distribuição de recursos e desenvolvimento de ações inclusivas.
         </p>
-        <Link to="/dados-sociais" className="inline-flex items-center gap-2 mt-6 bg-primary-foreground text-primary font-bold px-6 py-3 rounded-full hover:shadow-lg transition-all hover:scale-105">
+        <Link to="/admin" className="inline-flex items-center gap-2 mt-6 bg-primary-foreground text-primary font-bold px-6 py-3 rounded-full hover:shadow-lg transition-all hover:scale-105">
           Ver dados completos <ArrowRight className="w-4 h-4" />
         </Link>
       </motion.div>
