@@ -3,7 +3,7 @@ export interface AdminUser {
   username: string;
   password: string;
   name: string;
-  role: "super_admin" | "admin" | "analyst" | "editor";
+  role: "admin_total" | "admin_parcial";
   createdAt: string;
 }
 
@@ -16,7 +16,7 @@ const defaultUsers: AdminUser[] = [
     username: "admin",
     password: "admin",
     name: "Administrador",
-    role: "super_admin",
+    role: "admin_total",
     createdAt: new Date().toISOString(),
   },
 ];
@@ -74,8 +74,6 @@ export function deleteUser(id: string) {
 }
 
 export const roleLabels: Record<AdminUser["role"], string> = {
-  super_admin: "Super Admin",
-  admin: "Admin Institucional",
-  analyst: "Analista",
-  editor: "Editor de Conteúdo",
+  admin_total: "Admin Total",
+  admin_parcial: "Admin Parcial",
 };
