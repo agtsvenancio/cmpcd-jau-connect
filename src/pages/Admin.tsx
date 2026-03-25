@@ -2,15 +2,16 @@ import { useState, useEffect } from "react";
 import PageLayout from "@/components/PageLayout";
 import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Users } from "lucide-react";
+import { BarChart3, Users, ClipboardList } from "lucide-react";
 import { getSession, clearSession, type AdminUser, roleLabels } from "@/lib/adminAuth";
 import AdminLogin from "@/components/admin/AdminLogin";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminUsers from "@/components/admin/AdminUsers";
+import AdminCadastros from "@/components/admin/AdminCadastros";
 
 const Admin = () => {
   const [user, setUser] = useState<AdminUser | null>(null);
-  const [tab, setTab] = useState<"dashboard" | "users">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "cadastros" | "users">("dashboard");
 
   useEffect(() => {
     const session = getSession();
@@ -31,6 +32,8 @@ const Admin = () => {
     );
   }
 
+  const isTotal = user.role === "admin_total";
+
   return (
     <PageLayout>
       <PageHero title="Painel Administrativo" subtitle="Dados sociais e estatísticas do município" />
@@ -43,32 +46,26 @@ const Admin = () => {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant={tab === "dashboard" ? "default" : "outline"}
-                size="sm"
-                className="rounded-full gap-2"
-                onClick={() => setTab("dashboard")}
-              >
+              <Button variant={tab === "dashboard" ? "default" : "outline"} size="sm" className="rounded-full gap-2" onClick={() => setTab("dashboard")}>
                 <BarChart3 className="w-4 h-4" /> Dashboard
               </Button>
-              {(user.role === "super_admin" || user.role === "admin") && (
-                <Button
-                  variant={tab === "users" ? "default" : "outline"}
-                  size="sm"
-                  className="rounded-full gap-2"
-                  onClick={() => setTab("users")}
-                >
-                  <Users className="w-4 h-4" /> Usuários
-                </Button>
+              {isTotal && (
+                <>
+                  <Button variant={tab === "cadastros" ? "default" : "outline"} size="sm" className="rounded-full gap-2" onClick={() => setTab("cadastros")}>
+                    <ClipboardList className="w-4 h-4" /> Cadastrados
+                  </Button>
+                  <Button variant={tab === "users" ? "default" : "outline"} size="sm" className="rounded-full gap-2" onClick={() => setTab("users")}>
+                    <Users className="w-4 h-4" /> Usuários
+                  </Button>
+                </>
               )}
-              <Button variant="outline" size="sm" onClick={handleLogout} className="rounded-full">
-                Sair
-              </Button>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="rounded-full">Sair</Button>
             </div>
           </div>
 
           {tab === "dashboard" && <AdminDashboard />}
-          {tab === "users" && <AdminUsers currentUser={user} />}
+          {tab === "cadastros" && isTotal && <AdminCadastros />}
+          {tab === "users" && isTotal && <AdminUsers currentUser={user} />}
         </div>
       </section>
     </PageLayout>

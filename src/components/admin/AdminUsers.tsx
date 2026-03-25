@@ -15,7 +15,7 @@ interface AdminUsersProps {
 const AdminUsers = ({ currentUser }: AdminUsersProps) => {
   const [users, setUsers] = useState<AdminUser[]>(getUsers);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ username: "", password: "", name: "", role: "admin" as AdminUser["role"] });
+  const [form, setForm] = useState({ username: "", password: "", name: "", role: "admin_parcial" as AdminUser["role"] });
   const [error, setError] = useState("");
 
   const refresh = () => setUsers(getUsers());
@@ -29,7 +29,7 @@ const AdminUsers = ({ currentUser }: AdminUsersProps) => {
     try {
       createUser(form);
       refresh();
-      setForm({ username: "", password: "", name: "", role: "admin" });
+      setForm({ username: "", password: "", name: "", role: "admin_parcial" });
       setShowForm(false);
       setError("");
     } catch (err: any) {
@@ -43,13 +43,13 @@ const AdminUsers = ({ currentUser }: AdminUsersProps) => {
     refresh();
   };
 
-  const isSuperAdmin = currentUser.role === "super_admin";
+  const isTotal = currentUser.role === "admin_total";
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-bold text-foreground">Gestão de Usuários</h3>
-        {isSuperAdmin && (
+        {isTotal && (
           <Button onClick={() => setShowForm(!showForm)} className="rounded-full gap-2" size="sm">
             <UserPlus className="w-4 h-4" />
             Novo Usuário
@@ -57,7 +57,7 @@ const AdminUsers = ({ currentUser }: AdminUsersProps) => {
         )}
       </div>
 
-      {showForm && isSuperAdmin && (
+      {showForm && isTotal && (
         <motion.form
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
@@ -74,10 +74,8 @@ const AdminUsers = ({ currentUser }: AdminUsersProps) => {
               onChange={(e) => setForm({ ...form, role: e.target.value as AdminUser["role"] })}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
-              <option value="super_admin">Super Admin</option>
-              <option value="admin">Admin Institucional</option>
-              <option value="analyst">Analista</option>
-              <option value="editor">Editor de Conteúdo</option>
+              <option value="admin_total">Admin Total</option>
+              <option value="admin_parcial">Admin Parcial</option>
             </select>
           </div>
           {error && <p className="text-sm text-destructive font-medium">{error}</p>}
@@ -97,7 +95,7 @@ const AdminUsers = ({ currentUser }: AdminUsersProps) => {
                 <th className="text-left p-4 font-semibold text-foreground">Usuário</th>
                 <th className="text-left p-4 font-semibold text-foreground">Perfil</th>
                 <th className="text-left p-4 font-semibold text-foreground">Criado em</th>
-                {isSuperAdmin && <th className="text-center p-4 font-semibold text-foreground">Ações</th>}
+                {isTotal && <th className="text-center p-4 font-semibold text-foreground">Ações</th>}
               </tr>
             </thead>
             <tbody>
@@ -114,7 +112,7 @@ const AdminUsers = ({ currentUser }: AdminUsersProps) => {
                   <td className="p-4 text-muted-foreground">
                     {new Date(u.createdAt).toLocaleDateString("pt-BR")}
                   </td>
-                  {isSuperAdmin && (
+                  {isTotal && (
                     <td className="p-4 text-center">
                       {u.id !== currentUser.id ? (
                         <Button variant="ghost" size="sm" onClick={() => handleDelete(u.id)} className="text-destructive hover:text-destructive">
