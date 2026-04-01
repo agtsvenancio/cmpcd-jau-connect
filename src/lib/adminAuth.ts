@@ -76,4 +76,5 @@ export function deleteUser(id: string) {
 export const roleLabels: Record<AdminUser["role"], string> = {
   admin_total: "Admin Total",
   admin_parcial: "Admin Parcial",
+  editor: "Editor",
 };
