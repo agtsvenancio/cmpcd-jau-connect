@@ -3,7 +3,7 @@ export interface AdminUser {
   username: string;
   password: string;
   name: string;
-  role: "admin_total" | "admin_parcial";
+  role: "admin_total" | "admin_parcial" | "editor";
   createdAt: string;
 }
 
