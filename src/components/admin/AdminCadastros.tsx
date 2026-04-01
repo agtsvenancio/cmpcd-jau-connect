@@ -1,19 +1,69 @@
 import { useState } from "react";
-import { getCadastros, type CadastroPCD } from "@/lib/cadastroStorage";
+import { getCadastros, updateCadastro, type CadastroPCD } from "@/lib/cadastroStorage";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, ChevronDown, ChevronUp, Users } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search, ChevronDown, ChevronUp, Users, Pencil, Save, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
+
+function maskCPF(v: string) {
+  return v.replace(/\D/g, "").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2").slice(0, 14);
+}
+function maskPhone(v: string) {
+  const d = v.replace(/\D/g, "");
+  if (d.length <= 10) return d.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2");
+  return d.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2").slice(0, 15);
+}
+function maskCEP(v: string) {
+  return v.replace(/\D/g, "").replace(/(\d{5})(\d)/, "$1-$2").slice(0, 9);
+}
+
+const tiposDeficiencia = ["Física", "Auditiva", "Visual", "Intelectual", "Múltipla", "TEA", "Outros"];
 
 const AdminCadastros = () => {
-  const [cadastros] = useState<CadastroPCD[]>(getCadastros);
+  const [cadastros, setCadastros] = useState<CadastroPCD[]>(getCadastros);
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<CadastroPCD>>({});
+  const { toast } = useToast();
 
   const filtered = cadastros.filter((c) =>
     [c.nomeCompleto, c.bairro, c.tipoDeficiencia.join(", "), c.cpf]
       .join(" ").toLowerCase().includes(search.toLowerCase())
   );
+
+  const startEdit = (c: CadastroPCD) => {
+    setEditingId(c.id);
+    setEditForm({ ...c });
+    if (expanded !== c.id) setExpanded(c.id);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditForm({});
+  };
+
+  const saveEdit = () => {
+    if (!editingId) return;
+    const { id, createdAt, ...data } = editForm as CadastroPCD;
+    const updated = updateCadastro(editingId, data);
+    if (updated) {
+      setCadastros(getCadastros());
+      toast({ title: "Cadastro atualizado", description: "Os dados foram salvos com sucesso." });
+    }
+    setEditingId(null);
+    setEditForm({});
+  };
+
+  const setField = (field: string, value: any) => setEditForm((f) => ({ ...f, [field]: value }));
+
+  const toggleTipoEdit = (tipo: string) => {
+    const current = editForm.tipoDeficiencia || [];
+    setField("tipoDeficiencia", current.includes(tipo) ? current.filter((t) => t !== tipo) : [...current, tipo]);
+  };
 
   return (
     <div className="space-y-6">
@@ -32,90 +82,202 @@ const AdminCadastros = () => {
         </div>
       ) : (
         <div className="space-y-3">
-          {filtered.map((c) => (
-            <div key={c.id} className="bg-card rounded-2xl border border-border overflow-hidden" style={{ boxShadow: "var(--card-shadow)" }}>
-              <button
-                onClick={() => setExpanded(expanded === c.id ? null : c.id)}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-colors"
-              >
-                <div>
-                  <p className="font-semibold text-foreground">{c.nomeCompleto}</p>
-                  <p className="text-sm text-muted-foreground">{c.cpf} · {c.bairro} · {c.tipoDeficiencia.join(", ") || "—"}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString("pt-BR")}</span>
-                  {expanded === c.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </div>
-              </button>
+          {filtered.map((c) => {
+            const isEditing = editingId === c.id;
+            const data = isEditing ? editForm : c;
 
-              <AnimatePresence>
-                {expanded === c.id && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                    <div className="px-4 pb-4 grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm border-t border-border pt-4">
-                      <Detail label="Sexo" value={c.sexo} />
-                      <Detail label="Filiação" value={c.filiacao} />
-                      <Detail label="Data de Nascimento" value={c.dataNascimento} />
-                      <Detail label="Naturalidade" value={c.naturalidade} />
-                      <Detail label="Estado Civil" value={c.estadoCivil} />
-                      <Detail label="Tipo Sanguíneo" value={c.tipoSanguineo} />
-                      <Detail label="Endereço" value={`${c.endereco}, ${c.numero} - ${c.bairro}`} />
-                      <Detail label="Cidade/UF" value={`${c.cidade}/${c.uf}`} />
-                      <Detail label="CEP" value={c.cep} />
-                      <Detail label="Telefone" value={c.telefoneProprio} />
-                      <Detail label="Tel. Recados" value={c.telefoneRecados} />
-                      <Detail label="E-mail" value={c.email} />
+            return (
+              <div key={c.id} className="bg-card rounded-2xl border border-border overflow-hidden" style={{ boxShadow: "var(--card-shadow)" }}>
+                <button
+                  onClick={() => { if (!isEditing) setExpanded(expanded === c.id ? null : c.id); }}
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-colors"
+                >
+                  <div>
+                    <p className="font-semibold text-foreground">{c.nomeCompleto}</p>
+                    <p className="text-sm text-muted-foreground">{c.cpf} · {c.bairro} · {c.tipoDeficiencia.join(", ") || "—"}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!isEditing && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); startEdit(c); }}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    )}
+                    <span className="text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString("pt-BR")}</span>
+                    {expanded === c.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </div>
+                </button>
 
-                      <div className="sm:col-span-2 border-t border-border pt-2 mt-2">
-                        <p className="font-semibold text-foreground mb-1">Responsável Legal</p>
+                <AnimatePresence>
+                  {expanded === c.id && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                      <div className="px-4 pb-4 border-t border-border pt-4">
+                        {isEditing ? (
+                          <div className="space-y-6">
+                            {/* Dados do Requerente */}
+                            <div>
+                              <p className="font-semibold text-foreground mb-3">Dados do Requerente</p>
+                              <div className="grid sm:grid-cols-2 gap-3">
+                                <div className="sm:col-span-2"><Label>Nome completo</Label><Input value={data.nomeCompleto || ""} onChange={(e) => setField("nomeCompleto", e.target.value)} /></div>
+                                <div><Label>Sexo</Label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={data.sexo || ""} onChange={(e) => setField("sexo", e.target.value)}><option value="">Selecione</option><option>Masculino</option><option>Feminino</option><option>Outro</option></select></div>
+                                <div><Label>Filiação</Label><Input value={data.filiacao || ""} onChange={(e) => setField("filiacao", e.target.value)} /></div>
+                                <div><Label>Data de nascimento</Label><Input type="date" value={data.dataNascimento || ""} onChange={(e) => setField("dataNascimento", e.target.value)} /></div>
+                                <div><Label>Naturalidade</Label><Input value={data.naturalidade || ""} onChange={(e) => setField("naturalidade", e.target.value)} /></div>
+                                <div><Label>CPF</Label><Input value={data.cpf || ""} onChange={(e) => setField("cpf", maskCPF(e.target.value))} /></div>
+                                <div><Label>Estado civil</Label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={data.estadoCivil || ""} onChange={(e) => setField("estadoCivil", e.target.value)}><option value="">Selecione</option><option>Solteiro(a)</option><option>Casado(a)</option><option>Divorciado(a)</option><option>Viúvo(a)</option><option>União estável</option></select></div>
+                                <div><Label>Tipo sanguíneo</Label><Input value={data.tipoSanguineo || ""} onChange={(e) => setField("tipoSanguineo", e.target.value)} /></div>
+                                <div className="sm:col-span-2"><Label>Endereço</Label><Input value={data.endereco || ""} onChange={(e) => setField("endereco", e.target.value)} /></div>
+                                <div><Label>Número</Label><Input value={data.numero || ""} onChange={(e) => setField("numero", e.target.value)} /></div>
+                                <div><Label>Bairro</Label><Input value={data.bairro || ""} onChange={(e) => setField("bairro", e.target.value)} /></div>
+                                <div><Label>Cidade</Label><Input value={data.cidade || ""} onChange={(e) => setField("cidade", e.target.value)} /></div>
+                                <div><Label>UF</Label><Input value={data.uf || ""} onChange={(e) => setField("uf", e.target.value)} maxLength={2} /></div>
+                                <div><Label>CEP</Label><Input value={data.cep || ""} onChange={(e) => setField("cep", maskCEP(e.target.value))} /></div>
+                                <div><Label>Telefone próprio</Label><Input value={data.telefoneProprio || ""} onChange={(e) => setField("telefoneProprio", maskPhone(e.target.value))} /></div>
+                                <div><Label>Telefone recados</Label><Input value={data.telefoneRecados || ""} onChange={(e) => setField("telefoneRecados", maskPhone(e.target.value))} /></div>
+                                <div className="sm:col-span-2"><Label>E-mail</Label><Input type="email" value={data.email || ""} onChange={(e) => setField("email", e.target.value)} /></div>
+                              </div>
+                            </div>
+
+                            {/* Responsável Legal */}
+                            <div>
+                              <p className="font-semibold text-foreground mb-3">Responsável Legal</p>
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                  <Checkbox checked={data.possuiResponsavel || false} onCheckedChange={(v) => setField("possuiResponsavel", !!v)} />
+                                  <Label>Possui responsável legal</Label>
+                                </div>
+                                {data.possuiResponsavel && (
+                                  <div className="grid sm:grid-cols-2 gap-3">
+                                    <div><Label>Nome</Label><Input value={data.responsavelNome || ""} onChange={(e) => setField("responsavelNome", e.target.value)} /></div>
+                                    <div><Label>Telefone</Label><Input value={data.responsavelTelefone || ""} onChange={(e) => setField("responsavelTelefone", maskPhone(e.target.value))} /></div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Deficiência */}
+                            <div>
+                              <p className="font-semibold text-foreground mb-3">Deficiência</p>
+                              <div className="space-y-3">
+                                <div className="flex flex-wrap gap-3">
+                                  {tiposDeficiencia.map((t) => (
+                                    <label key={t} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                                      <Checkbox checked={(data.tipoDeficiencia || []).includes(t)} onCheckedChange={() => toggleTipoEdit(t)} />
+                                      {t}
+                                    </label>
+                                  ))}
+                                </div>
+                                {(data.tipoDeficiencia || []).includes("Outros") && (
+                                  <div><Label>Especifique</Label><Input value={data.tipoDeficienciaOutros || ""} onChange={(e) => setField("tipoDeficienciaOutros", e.target.value)} /></div>
+                                )}
+                                <div className="grid sm:grid-cols-2 gap-3">
+                                  <div><Label>CID</Label><Input value={data.cid || ""} onChange={(e) => setField("cid", e.target.value)} /></div>
+                                  <div><Label>Grau</Label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={data.grauDeficiencia || ""} onChange={(e) => setField("grauDeficiencia", e.target.value)}><option value="">Selecione</option><option>Leve</option><option>Moderado</option><option>Grave</option></select></div>
+                                  <div><Label>Data do laudo</Label><Input type="date" value={data.dataLaudo || ""} onChange={(e) => setField("dataLaudo", e.target.value)} /></div>
+                                  <div><Label>Médico</Label><Input value={data.medicoNome || ""} onChange={(e) => setField("medicoNome", e.target.value)} /></div>
+                                  <div><Label>CRM</Label><Input value={data.medicoCRM || ""} onChange={(e) => setField("medicoCRM", e.target.value)} /></div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Checkbox checked={data.usaTecnologiaAssistiva || false} onCheckedChange={(v) => setField("usaTecnologiaAssistiva", !!v)} />
+                                  <Label>Usa tecnologia assistiva</Label>
+                                </div>
+                                {data.usaTecnologiaAssistiva && <div><Label>Qual?</Label><Input value={data.tecnologiaAssistivaQual || ""} onChange={(e) => setField("tecnologiaAssistivaQual", e.target.value)} /></div>}
+                                <div className="flex items-center gap-2">
+                                  <Checkbox checked={data.participaEntidade || false} onCheckedChange={(v) => setField("participaEntidade", !!v)} />
+                                  <Label>Participa de entidade</Label>
+                                </div>
+                                {data.participaEntidade && <div><Label>Qual?</Label><Input value={data.entidadeQual || ""} onChange={(e) => setField("entidadeQual", e.target.value)} /></div>}
+                              </div>
+                            </div>
+
+                            {/* Informações Adicionais */}
+                            <div>
+                              <p className="font-semibold text-foreground mb-3">Informações Adicionais</p>
+                              <div className="grid sm:grid-cols-2 gap-3">
+                                <div><Label>Escolaridade</Label><Input value={data.escolaridade || ""} onChange={(e) => setField("escolaridade", e.target.value)} /></div>
+                                <div><Label>Ocupação</Label><Input value={data.ocupacao || ""} onChange={(e) => setField("ocupacao", e.target.value)} /></div>
+                                <div className="flex items-center gap-2">
+                                  <Checkbox checked={data.recebeBPC || false} onCheckedChange={(v) => setField("recebeBPC", !!v)} />
+                                  <Label>Recebe BPC/LOAS</Label>
+                                </div>
+                                <div><Label>Renda familiar</Label><Input value={data.rendaFamiliar || ""} onChange={(e) => setField("rendaFamiliar", e.target.value)} /></div>
+                              </div>
+                            </div>
+
+                            {/* Ações */}
+                            <div className="flex gap-2 pt-4 border-t border-border">
+                              <Button onClick={saveEdit} className="rounded-full gap-2"><Save className="w-4 h-4" />Salvar alterações</Button>
+                              <Button variant="outline" onClick={cancelEdit} className="rounded-full gap-2"><X className="w-4 h-4" />Cancelar</Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                            <Detail label="Sexo" value={c.sexo} />
+                            <Detail label="Filiação" value={c.filiacao} />
+                            <Detail label="Data de Nascimento" value={c.dataNascimento} />
+                            <Detail label="Naturalidade" value={c.naturalidade} />
+                            <Detail label="Estado Civil" value={c.estadoCivil} />
+                            <Detail label="Tipo Sanguíneo" value={c.tipoSanguineo} />
+                            <Detail label="Endereço" value={`${c.endereco}, ${c.numero} - ${c.bairro}`} />
+                            <Detail label="Cidade/UF" value={`${c.cidade}/${c.uf}`} />
+                            <Detail label="CEP" value={c.cep} />
+                            <Detail label="Telefone" value={c.telefoneProprio} />
+                            <Detail label="Tel. Recados" value={c.telefoneRecados} />
+                            <Detail label="E-mail" value={c.email} />
+
+                            <div className="sm:col-span-2 border-t border-border pt-2 mt-2">
+                              <p className="font-semibold text-foreground mb-1">Responsável Legal</p>
+                            </div>
+                            <Detail label="Possui" value={c.possuiResponsavel ? "Sim" : "Não"} />
+                            {c.possuiResponsavel && <>
+                              <Detail label="Nome" value={c.responsavelNome} />
+                              <Detail label="Telefone" value={c.responsavelTelefone} />
+                            </>}
+
+                            <div className="sm:col-span-2 border-t border-border pt-2 mt-2">
+                              <p className="font-semibold text-foreground mb-1">Deficiência</p>
+                            </div>
+                            <Detail label="Tipo" value={c.tipoDeficiencia.join(", ")} />
+                            {c.tipoDeficienciaOutros && <Detail label="Outros" value={c.tipoDeficienciaOutros} />}
+                            <Detail label="CID" value={c.cid} />
+                            <Detail label="Grau" value={c.grauDeficiencia} />
+                            <Detail label="Data Laudo" value={c.dataLaudo} />
+                            <Detail label="Médico" value={c.medicoNome} />
+                            <Detail label="CRM" value={c.medicoCRM} />
+                            <Detail label="Tec. Assistiva" value={c.usaTecnologiaAssistiva ? `Sim - ${c.tecnologiaAssistivaQual}` : "Não"} />
+                            <Detail label="Entidade" value={c.participaEntidade ? `Sim - ${c.entidadeQual}` : "Não"} />
+
+                            <div className="sm:col-span-2 border-t border-border pt-2 mt-2">
+                              <p className="font-semibold text-foreground mb-1">Informações Adicionais</p>
+                            </div>
+                            <Detail label="Escolaridade" value={c.escolaridade} />
+                            <Detail label="Ocupação" value={c.ocupacao} />
+                            <Detail label="BPC/LOAS" value={c.recebeBPC ? "Sim" : "Não"} />
+                            <Detail label="Renda Familiar" value={c.rendaFamiliar} />
+
+                            {c.composicaoFamiliar.length > 0 && <>
+                              <div className="sm:col-span-2 border-t border-border pt-2 mt-2">
+                                <p className="font-semibold text-foreground mb-1">Composição Familiar</p>
+                              </div>
+                              {c.composicaoFamiliar.map((f, i) => (
+                                <Detail key={i} label={f.parentesco || "Membro"} value={`${f.nome} (${f.dataNascimento})`} />
+                              ))}
+                            </>}
+
+                            <div className="sm:col-span-2 border-t border-border pt-2 mt-2">
+                              <p className="font-semibold text-foreground mb-1">Documentos</p>
+                            </div>
+                            <Detail label="RG" value={c.docRG ? "✓ Enviado" : "—"} />
+                            <Detail label="Comprovante" value={c.docComprovante ? "✓ Enviado" : "—"} />
+                            <Detail label="Laudo" value={c.docLaudo ? "✓ Enviado" : "—"} />
+                          </div>
+                        )}
                       </div>
-                      <Detail label="Possui" value={c.possuiResponsavel ? "Sim" : "Não"} />
-                      {c.possuiResponsavel && <>
-                        <Detail label="Nome" value={c.responsavelNome} />
-                        <Detail label="Telefone" value={c.responsavelTelefone} />
-                      </>}
-
-                      <div className="sm:col-span-2 border-t border-border pt-2 mt-2">
-                        <p className="font-semibold text-foreground mb-1">Deficiência</p>
-                      </div>
-                      <Detail label="Tipo" value={c.tipoDeficiencia.join(", ")} />
-                      {c.tipoDeficienciaOutros && <Detail label="Outros" value={c.tipoDeficienciaOutros} />}
-                      <Detail label="CID" value={c.cid} />
-                      <Detail label="Grau" value={c.grauDeficiencia} />
-                      <Detail label="Data Laudo" value={c.dataLaudo} />
-                      <Detail label="Médico" value={c.medicoNome} />
-                      <Detail label="CRM" value={c.medicoCRM} />
-                      <Detail label="Tec. Assistiva" value={c.usaTecnologiaAssistiva ? `Sim - ${c.tecnologiaAssistivaQual}` : "Não"} />
-                      <Detail label="Entidade" value={c.participaEntidade ? `Sim - ${c.entidadeQual}` : "Não"} />
-
-                      <div className="sm:col-span-2 border-t border-border pt-2 mt-2">
-                        <p className="font-semibold text-foreground mb-1">Informações Adicionais</p>
-                      </div>
-                      <Detail label="Escolaridade" value={c.escolaridade} />
-                      <Detail label="Ocupação" value={c.ocupacao} />
-                      <Detail label="BPC/LOAS" value={c.recebeBPC ? "Sim" : "Não"} />
-                      <Detail label="Renda Familiar" value={c.rendaFamiliar} />
-
-                      {c.composicaoFamiliar.length > 0 && <>
-                        <div className="sm:col-span-2 border-t border-border pt-2 mt-2">
-                          <p className="font-semibold text-foreground mb-1">Composição Familiar</p>
-                        </div>
-                        {c.composicaoFamiliar.map((f, i) => (
-                          <Detail key={i} label={f.parentesco || "Membro"} value={`${f.nome} (${f.dataNascimento})`} />
-                        ))}
-                      </>}
-
-                      <div className="sm:col-span-2 border-t border-border pt-2 mt-2">
-                        <p className="font-semibold text-foreground mb-1">Documentos</p>
-                      </div>
-                      <Detail label="RG" value={c.docRG ? "✓ Enviado" : "—"} />
-                      <Detail label="Comprovante" value={c.docComprovante ? "✓ Enviado" : "—"} />
-                      <Detail label="Laudo" value={c.docLaudo ? "✓ Enviado" : "—"} />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

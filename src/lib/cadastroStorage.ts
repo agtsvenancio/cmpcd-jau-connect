@@ -85,6 +85,15 @@ export function saveCadastro(cadastro: Omit<CadastroPCD, "id" | "createdAt">): C
   return newCadastro;
 }
 
+export function updateCadastro(id: string, data: Partial<Omit<CadastroPCD, "id" | "createdAt">>): CadastroPCD | null {
+  const cadastros = getCadastros();
+  const index = cadastros.findIndex((c) => c.id === id);
+  if (index === -1) return null;
+  cadastros[index] = { ...cadastros[index], ...data };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cadastros));
+  return cadastros[index];
+}
+
 export function deleteCadastro(id: string) {
   const cadastros = getCadastros().filter((c) => c.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cadastros));
