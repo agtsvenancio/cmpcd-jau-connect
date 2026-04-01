@@ -76,6 +76,7 @@ const AdminUsers = ({ currentUser }: AdminUsersProps) => {
             >
               <option value="admin_total">Admin Total</option>
               <option value="admin_parcial">Admin Parcial</option>
+              <option value="editor">Editor</option>
             </select>
           </div>
           {error && <p className="text-sm text-destructive font-medium">{error}</p>}
