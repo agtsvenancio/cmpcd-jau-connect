@@ -3,7 +3,7 @@ export interface AdminUser {
   username: string;
   password: string;
   name: string;
-  role: "admin_total" | "admin_parcial";
+  role: "admin_total" | "admin_parcial" | "editor";
   createdAt: string;
 }
 
@@ -76,4 +76,5 @@ export function deleteUser(id: string) {
 export const roleLabels: Record<AdminUser["role"], string> = {
   admin_total: "Admin Total",
   admin_parcial: "Admin Parcial",
+  editor: "Editor",
 };
