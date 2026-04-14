@@ -68,9 +68,67 @@ export interface CadastroPCD {
 
 const STORAGE_KEY = "cmpcd_cadastros";
 
+function seedDemoData() {
+  const demo: CadastroPCD = {
+    id: "demo-001",
+    createdAt: "2026-04-14T12:00:00.000Z",
+    nomeCompleto: "Maria Silva Santos",
+    sexo: "Feminino",
+    filiacao: "João Santos e Ana Silva",
+    dataNascimento: "1990-03-15",
+    naturalidade: "Jaú - SP",
+    cpf: "123.456.789-00",
+    estadoCivil: "Solteiro(a)",
+    tipoSanguineo: "O+",
+    endereco: "Rua das Flores",
+    numero: "123",
+    bairro: "Centro",
+    cidade: "Jaú",
+    uf: "SP",
+    cep: "17210-000",
+    telefoneProprio: "(14) 99999-1234",
+    telefoneRecados: "(14) 99888-5678",
+    email: "maria.silva@email.com",
+    possuiResponsavel: false,
+    responsavelNome: "",
+    responsavelTelefone: "",
+    tipoDeficiencia: ["Física"],
+    tipoDeficienciaOutros: "",
+    cid: "G80.0",
+    grauDeficiencia: "Moderado",
+    dataLaudo: "2025-06-10",
+    medicoNome: "Dr. Carlos Ferreira",
+    medicoCRM: "CRM/SP 54321",
+    usaTecnologiaAssistiva: true,
+    tecnologiaAssistivaQual: "Cadeira de rodas motorizada",
+    participaEntidade: true,
+    entidadeQual: "APAE Jaú",
+    escolaridade: "Ensino Médio Completo",
+    ocupacao: "Artesã",
+    recebeBPC: true,
+    rendaFamiliar: "1 a 2 salários mínimos",
+    composicaoFamiliar: [
+      { nome: "João Santos", dataNascimento: "1960-01-20", parentesco: "Pai" },
+      { nome: "Ana Silva", dataNascimento: "1962-05-10", parentesco: "Mãe" },
+    ],
+    docRG: "",
+    docComprovante: "",
+    docLaudo: "",
+    consentimentoCidade: "Jaú",
+    consentimentoData: "2026-04-14",
+    consentimentoNome: "Maria Silva Santos",
+    consentimento: true,
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([demo]));
+}
+
 export function getCadastros(): CadastroPCD[] {
   const stored = localStorage.getItem(STORAGE_KEY);
-  return stored ? JSON.parse(stored) : [];
+  if (!stored || stored === "[]") {
+    seedDemoData();
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  }
+  return JSON.parse(stored);
 }
 
 export function saveCadastro(cadastro: Omit<CadastroPCD, "id" | "createdAt">): CadastroPCD {
