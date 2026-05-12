@@ -10,7 +10,7 @@ interface PageLayoutProps {
 const PageLayout = ({ children }: PageLayoutProps) => (
   <>
     <SiteHeader />
-    <main className="pt-16">{children}</main>
+    <main id="main-content" className="pt-16" tabIndex={-1}>{children}</main>
     <SiteFooter />
     <AccessibilityToolbar />
   </>

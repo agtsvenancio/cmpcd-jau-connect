@@ -83,3 +83,49 @@
   --accent-foreground: 0 0% 0%;
   --hero-gradient: linear-gradient(135deg, hsl(60 100% 50%), hsl(60 100% 40%));
 }
+
+/* Grayscale mode */
+.a11y-grayscale {
+  filter: grayscale(100%);
+}
+
+/* Highlight links */
+.a11y-highlight-links a,
+.a11y-highlight-links button {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 3px !important;
+  outline: 2px dashed hsl(var(--primary) / 0.6);
+  outline-offset: 2px;
+}
+
+/* Reading mode: increase line-height & letter-spacing */
+.a11y-reading-mode {
+  line-height: 1.9 !important;
+  letter-spacing: 0.03em !important;
+  word-spacing: 0.1em !important;
+}
+.a11y-reading-mode p,
+.a11y-reading-mode li,
+.a11y-reading-mode h1,
+.a11y-reading-mode h2,
+.a11y-reading-mode h3 {
+  max-width: 70ch;
+}
+
+/* Visible focus for keyboard users on every interactive element */
+*:focus-visible {
+  outline: 3px solid hsl(var(--primary)) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
