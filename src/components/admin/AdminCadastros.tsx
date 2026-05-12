@@ -82,7 +82,7 @@ const AdminCadastros = () => {
       "Renda Familiar": c.rendaFamiliar,
       "Composição Familiar": (c.composicaoFamiliar || []).map((f) => `${f.nome} (${f.parentesco}, ${f.dataNascimento})`).join("; "),
     }));
-    const ws = XLSX.utils.json_sheet_to_sheet ? XLSX.utils.json_to_sheet(rows) : XLSX.utils.json_to_sheet(rows);
+    const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Cadastros PCD");
     XLSX.writeFile(wb, `cadastros-pcd-${new Date().toISOString().slice(0,10)}.xlsx`);
