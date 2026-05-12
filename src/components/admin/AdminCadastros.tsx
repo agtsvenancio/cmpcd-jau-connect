@@ -29,7 +29,189 @@ const AdminCadastros = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<CadastroPCD>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const cadastroFields: (keyof CadastroPCD)[] = [
+    "nomeCompleto","sexo","filiacao","dataNascimento","naturalidade","cpf","estadoCivil","tipoSanguineo",
+    "endereco","numero","bairro","cidade","uf","cep","telefoneProprio","telefoneRecados","email",
+    "possuiResponsavel","responsavelNome","responsavelTelefone",
+    "tipoDeficiencia","tipoDeficienciaOutros","cid","grauDeficiencia","dataLaudo","medicoNome","medicoCRM",
+    "usaTecnologiaAssistiva","tecnologiaAssistivaQual","participaEntidade","entidadeQual",
+    "escolaridade","ocupacao","recebeBPC","rendaFamiliar","composicaoFamiliar",
+    "consentimentoCidade","consentimentoData","consentimentoNome","consentimento",
+  ];
+
+  const exportToExcel = () => {
+    const rows = cadastros.map((c) => ({
+      "Data Cadastro": new Date(c.createdAt).toLocaleDateString("pt-BR"),
+      "Nome Completo": c.nomeCompleto,
+      "CPF": c.cpf,
+      "Sexo": c.sexo,
+      "Filiação": c.filiacao,
+      "Data de Nascimento": c.dataNascimento,
+      "Naturalidade": c.naturalidade,
+      "Estado Civil": c.estadoCivil,
+      "Tipo Sanguíneo": c.tipoSanguineo,
+      "Endereço": c.endereco,
+      "Número": c.numero,
+      "Bairro": c.bairro,
+      "Cidade": c.cidade,
+      "UF": c.uf,
+      "CEP": c.cep,
+      "Telefone Próprio": c.telefoneProprio,
+      "Telefone Recados": c.telefoneRecados,
+      "E-mail": c.email,
+      "Possui Responsável": c.possuiResponsavel ? "Sim" : "Não",
+      "Responsável Nome": c.responsavelNome,
+      "Responsável Telefone": c.responsavelTelefone,
+      "Tipo Deficiência": (c.tipoDeficiencia || []).join("; "),
+      "Tipo Deficiência (Outros)": c.tipoDeficienciaOutros,
+      "CID": c.cid,
+      "Grau": c.grauDeficiencia,
+      "Data Laudo": c.dataLaudo,
+      "Médico": c.medicoNome,
+      "CRM": c.medicoCRM,
+      "Usa Tec. Assistiva": c.usaTecnologiaAssistiva ? "Sim" : "Não",
+      "Qual Tec. Assistiva": c.tecnologiaAssistivaQual,
+      "Participa Entidade": c.participaEntidade ? "Sim" : "Não",
+      "Qual Entidade": c.entidadeQual,
+      "Escolaridade": c.escolaridade,
+      "Ocupação": c.ocupacao,
+      "Recebe BPC": c.recebeBPC ? "Sim" : "Não",
+      "Renda Familiar": c.rendaFamiliar,
+      "Composição Familiar": (c.composicaoFamiliar || []).map((f) => `${f.nome} (${f.parentesco}, ${f.dataNascimento})`).join("; "),
+    }));
+    const ws = XLSX.utils.json_sheet_to_sheet ? XLSX.utils.json_to_sheet(rows) : XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Cadastros PCD");
+    XLSX.writeFile(wb, `cadastros-pcd-${new Date().toISOString().slice(0,10)}.xlsx`);
+    toast({ title: "Exportação concluída", description: `${rows.length} cadastro(s) exportado(s).` });
+  };
+
+  const downloadTemplate = () => {
+    const exemplo = [{
+      "Nome Completo": "Exemplo da Silva",
+      "CPF": "000.000.000-00",
+      "Sexo": "Masculino",
+      "Filiação": "",
+      "Data de Nascimento": "1990-01-01",
+      "Naturalidade": "Jaú - SP",
+      "Estado Civil": "Solteiro(a)",
+      "Tipo Sanguíneo": "",
+      "Endereço": "Rua Exemplo",
+      "Número": "100",
+      "Bairro": "Centro",
+      "Cidade": "Jaú",
+      "UF": "SP",
+      "CEP": "17200-000",
+      "Telefone Próprio": "(14) 99999-0000",
+      "Telefone Recados": "",
+      "E-mail": "",
+      "Possui Responsável": "Não",
+      "Responsável Nome": "",
+      "Responsável Telefone": "",
+      "Tipo Deficiência": "Física; Visual",
+      "Tipo Deficiência (Outros)": "",
+      "CID": "",
+      "Grau": "Moderado",
+      "Data Laudo": "",
+      "Médico": "",
+      "CRM": "",
+      "Usa Tec. Assistiva": "Não",
+      "Qual Tec. Assistiva": "",
+      "Participa Entidade": "Não",
+      "Qual Entidade": "",
+      "Escolaridade": "",
+      "Ocupação": "",
+      "Recebe BPC": "Não",
+      "Renda Familiar": "",
+      "Composição Familiar": "",
+    }];
+    const ws = XLSX.utils.json_to_sheet(exemplo);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Modelo");
+    XLSX.writeFile(wb, "modelo-importacao-pcd.xlsx");
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+        const wb = XLSX.read(data, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: "" });
+        const sim = (v: any) => String(v).trim().toLowerCase() === "sim" || v === true;
+        const items = rows
+          .filter((r) => (r["Nome Completo"] || r["nomeCompleto"] || "").toString().trim())
+          .map((r) => {
+            const tipos = String(r["Tipo Deficiência"] || "").split(/[;,]/).map((s) => s.trim()).filter(Boolean);
+            const compStr = String(r["Composição Familiar"] || "");
+            const composicao: FamilyMember[] = compStr ? compStr.split(";").map((s) => {
+              const m = s.trim().match(/^(.+?)\s*\((.+?),\s*(.+?)\)$/);
+              return m ? { nome: m[1], parentesco: m[2], dataNascimento: m[3] } : { nome: s.trim(), parentesco: "", dataNascimento: "" };
+            }).filter((f) => f.nome) : [];
+            return {
+              nomeCompleto: String(r["Nome Completo"] || ""),
+              sexo: String(r["Sexo"] || ""),
+              filiacao: String(r["Filiação"] || ""),
+              dataNascimento: String(r["Data de Nascimento"] || ""),
+              naturalidade: String(r["Naturalidade"] || ""),
+              cpf: String(r["CPF"] || ""),
+              estadoCivil: String(r["Estado Civil"] || ""),
+              tipoSanguineo: String(r["Tipo Sanguíneo"] || ""),
+              endereco: String(r["Endereço"] || ""),
+              numero: String(r["Número"] || ""),
+              bairro: String(r["Bairro"] || ""),
+              cidade: String(r["Cidade"] || ""),
+              uf: String(r["UF"] || ""),
+              cep: String(r["CEP"] || ""),
+              telefoneProprio: String(r["Telefone Próprio"] || ""),
+              telefoneRecados: String(r["Telefone Recados"] || ""),
+              email: String(r["E-mail"] || ""),
+              possuiResponsavel: sim(r["Possui Responsável"]),
+              responsavelNome: String(r["Responsável Nome"] || ""),
+              responsavelTelefone: String(r["Responsável Telefone"] || ""),
+              tipoDeficiencia: tipos,
+              tipoDeficienciaOutros: String(r["Tipo Deficiência (Outros)"] || ""),
+              cid: String(r["CID"] || ""),
+              grauDeficiencia: String(r["Grau"] || ""),
+              dataLaudo: String(r["Data Laudo"] || ""),
+              medicoNome: String(r["Médico"] || ""),
+              medicoCRM: String(r["CRM"] || ""),
+              usaTecnologiaAssistiva: sim(r["Usa Tec. Assistiva"]),
+              tecnologiaAssistivaQual: String(r["Qual Tec. Assistiva"] || ""),
+              participaEntidade: sim(r["Participa Entidade"]),
+              entidadeQual: String(r["Qual Entidade"] || ""),
+              escolaridade: String(r["Escolaridade"] || ""),
+              ocupacao: String(r["Ocupação"] || ""),
+              recebeBPC: sim(r["Recebe BPC"]),
+              rendaFamiliar: String(r["Renda Familiar"] || ""),
+              composicaoFamiliar: composicao,
+              docRG: "", docComprovante: "", docLaudo: "",
+              consentimentoCidade: "Jaú",
+              consentimentoData: new Date().toISOString().slice(0,10),
+              consentimentoNome: String(r["Nome Completo"] || ""),
+              consentimento: true,
+            };
+          });
+        if (items.length === 0) {
+          toast({ title: "Nenhum registro válido", description: "Verifique se a planilha tem a coluna 'Nome Completo'.", variant: "destructive" });
+        } else {
+          const count = importCadastros(items);
+          setCadastros(getCadastros());
+          toast({ title: "Importação concluída", description: `${count} cadastro(s) importado(s).` });
+        }
+      } catch (err) {
+        toast({ title: "Erro ao importar", description: "Verifique se o arquivo é uma planilha Excel válida.", variant: "destructive" });
+      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+    reader.readAsArrayBuffer(file);
+  };
 
   const filtered = cadastros.filter((c) =>
     [c.nomeCompleto, c.bairro, c.tipoDeficiencia.join(", "), c.cpf]
