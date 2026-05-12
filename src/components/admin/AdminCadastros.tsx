@@ -252,9 +252,21 @@ const AdminCadastros = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <h3 className="text-lg font-bold text-foreground">Cadastros de PCD ({cadastros.length})</h3>
-        <div className="relative w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input className="pl-9" placeholder="Buscar por nome, bairro, deficiência..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="flex items-center gap-2 flex-wrap">
+          <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
+          <Button variant="outline" size="sm" className="rounded-full gap-2" onClick={downloadTemplate}>
+            <Download className="w-4 h-4" /> Modelo
+          </Button>
+          <Button variant="outline" size="sm" className="rounded-full gap-2" onClick={() => fileInputRef.current?.click()}>
+            <Upload className="w-4 h-4" /> Importar Excel
+          </Button>
+          <Button variant="outline" size="sm" className="rounded-full gap-2" onClick={exportToExcel} disabled={cadastros.length === 0}>
+            <Download className="w-4 h-4" /> Exportar Excel
+          </Button>
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input className="pl-9" placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
         </div>
       </div>
 
