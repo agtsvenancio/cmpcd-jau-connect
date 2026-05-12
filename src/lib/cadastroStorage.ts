@@ -152,6 +152,17 @@ export function updateCadastro(id: string, data: Partial<Omit<CadastroPCD, "id" 
   return cadastros[index];
 }
 
+export function importCadastros(items: Omit<CadastroPCD, "id" | "createdAt">[]): number {
+  const cadastros = getCadastros();
+  const novos: CadastroPCD[] = items.map((item) => ({
+    ...item,
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+  }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...cadastros, ...novos]));
+  return novos.length;
+}
+
 export function deleteCadastro(id: string) {
   const cadastros = getCadastros().filter((c) => c.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cadastros));
