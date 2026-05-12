@@ -1,12 +1,13 @@
-import { useState } from "react";
-import { getCadastros, updateCadastro, type CadastroPCD } from "@/lib/cadastroStorage";
+import { useState, useRef } from "react";
+import { getCadastros, updateCadastro, importCadastros, type CadastroPCD, type FamilyMember } from "@/lib/cadastroStorage";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, ChevronDown, ChevronUp, Users, Pencil, Save, X } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Users, Pencil, Save, X, Download, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import * as XLSX from "xlsx";
 
 function maskCPF(v: string) {
   return v.replace(/\D/g, "").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2").slice(0, 14);
